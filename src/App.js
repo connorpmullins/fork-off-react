@@ -1,5 +1,5 @@
 import React from "react";
-import { db, auth } from "./firebaseConfig";
+import "./firebaseConfig";
 import useStory from "./hooks/useStory";
 
 const StoryApp = () => {

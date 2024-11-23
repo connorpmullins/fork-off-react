@@ -2,6 +2,8 @@ import { useState } from "react";
 import { generateStoryForks } from "../openaiService";
 
 type UseStoryReturn = {
+  loading: boolean;
+  error: string | null;
   story: string[];
   forks: string[];
   addFork: () => Promise<void>;
@@ -36,6 +38,8 @@ const useStory = (): UseStoryReturn => {
   };
 
   return {
+    loading,
+    error,
     story,
     forks,
     addFork,
