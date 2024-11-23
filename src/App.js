@@ -1,29 +1,31 @@
-import logo from './logo.svg';
+import React from "react";
 import { db, auth } from "./firebaseConfig";
-import './App.css';
+import useStory from "./hooks/useStory";
 
-function App() {
-
-console.log("Firestore instance:", db);
+const StoryApp = () => {
+  const { story, forks, addFork, selectFork, loading, error } = useStory();
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Fork-Off</h1>
+      <div>
+        <p>{story.join(" ")}</p>
+        <button onClick={addFork} disabled={loading}>
+          {loading ? "Generating..." : "Generate Forks"}
+        </button>
+      </div>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {forks.length > 0 && (
+        <div>
+          {forks.map((fork, index) => (
+            <button key={index} onClick={() => selectFork(fork)}>
+              {fork}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
-}
+};
 
-export default App;
+export default StoryApp;
