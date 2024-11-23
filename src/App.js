@@ -1,7 +1,11 @@
 import logo from './logo.svg';
+import { db, auth } from "./firebaseConfig";
 import './App.css';
 
 function App() {
+
+console.log("Firestore instance:", db);
+
   return (
     <div className="App">
       <header className="App-header">
