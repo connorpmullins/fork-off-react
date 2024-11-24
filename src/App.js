@@ -1,31 +1,44 @@
 import React from "react";
-import "./firebaseConfig";
+import "./firebase/config";
 import useStory from "./hooks/useStory";
 
-const StoryApp = () => {
-  const { story, forks, addFork, selectFork, loading, error } = useStory();
+const StoryGame = () => {
+  const { loading, error, story, forks, addFork, castVote, nextRound } =
+    useStory();
 
   return (
     <div>
-      <h1>Fork-Off</h1>
+      <h1>Fork-Off Game</h1>
       <div>
+        <h2>Story So Far:</h2>
         <p>{story.join(" ")}</p>
-        <button onClick={addFork} disabled={loading}>
-          {loading ? "Generating..." : "Generate Forks"}
-        </button>
       </div>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {forks.length > 0 && (
-        <div>
-          {forks.map((fork, index) => (
-            <button key={index} onClick={() => selectFork(fork)}>
-              {fork}
+
+      <div>
+        {forks.length === 0 && (
+          <button onClick={addFork} disabled={loading}>
+            Generate Forks
+          </button>
+        )}
+        {forks.length > 0 && (
+          <div>
+            <h2>Choose the Next Fork:</h2>
+            {forks.map((fork) => (
+              <div key={fork.id}>
+                <p>{fork.content}</p>
+                <button onClick={() => castVote(fork.id)}>Vote</button>
+              </div>
+            ))}
+            <button onClick={nextRound} disabled={loading}>
+              Next Round
             </button>
-          ))}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
 };
 
-export default StoryApp;
+export default StoryGame;
