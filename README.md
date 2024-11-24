@@ -1,3 +1,9 @@
+- You'll need to add a `.env.local` file to the `functions` directory
+- You'll need to add a `.env` file to the root directory
+- Contact Connor for values for the root firebase project
+
+# Key firebase commands:
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
