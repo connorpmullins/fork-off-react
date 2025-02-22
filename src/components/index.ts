@@ -1,4 +1,3 @@
-import React from "react";
 import { Header } from "./Header";
 import { RoomManager } from "./RoomManager";
 import { StoryViewer } from "./StoryViewer";

@@ -1,6 +1,3 @@
-import useStory from "./useStory"
+import useStory from "./useStory";
 
-export {
-  useStory
-}
-
+export { useStory };

@@ -29,7 +29,7 @@ type UseStoryReturn = {
 
 const useStory = (
   initialRoomId: string | null,
-  nickname: string,
+  nickname: string
 ): UseStoryReturn => {
   const [roomId, setRoomId] = useState<string | null>(initialRoomId);
   const [story, setStory] = useState<string[]>([]);
@@ -74,7 +74,7 @@ const useStory = (
         setLoading(false);
       }
     },
-    [],
+    []
   );
 
   // Function to join a room
@@ -93,7 +93,7 @@ const useStory = (
         setLoading(false);
       }
     },
-    [],
+    []
   );
 
   // Function to cast a vote
@@ -106,7 +106,7 @@ const useStory = (
         setError("Failed to cast vote.");
       }
     },
-    [roomId],
+    [roomId]
   );
 
   // Function to add forks
@@ -121,7 +121,7 @@ const useStory = (
           id: `${Date.now()}-${index}`,
           content,
           votes: 0,
-        }),
+        })
       );
       setForks(formattedForks);
     } catch (err) {
@@ -143,7 +143,7 @@ const useStory = (
         setError("Selected fork not found.");
       }
     },
-    [forks],
+    [forks]
   );
 
   // Function to handle the next round
@@ -156,7 +156,7 @@ const useStory = (
     const winningFork = forks.reduce((topFork, currentFork) =>
       (votes[currentFork.id] || 0) > (votes[topFork.id] || 0)
         ? currentFork
-        : topFork,
+        : topFork
     );
 
     if (winningFork) {

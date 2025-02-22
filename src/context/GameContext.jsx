@@ -44,7 +44,7 @@ export const GameProvider = ({ children }) => {
             gameStarted: data.gameStarted,
           }));
         }
-      },
+      }
     );
 
     return () => unsubscribe();
@@ -134,7 +134,7 @@ export const GameProvider = ({ children }) => {
     try {
       const roomRef = doc(db, "rooms", gameState.roomId);
       const currentPlayer = gameState.players.find(
-        (p) => p.nickname === gameState.nickname,
+        (p) => p.nickname === gameState.nickname
       );
 
       if (currentPlayer) {
@@ -149,7 +149,7 @@ export const GameProvider = ({ children }) => {
         const roomSnap = await getDoc(roomRef);
         const roomData = roomSnap.data();
         const remainingPlayers = roomData.players.filter(
-          (p) => p.nickname !== gameState.nickname,
+          (p) => p.nickname !== gameState.nickname
         );
 
         if (remainingPlayers.length > 0) {
