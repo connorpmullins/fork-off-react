@@ -1,13 +1,16 @@
 import React, { useState } from "react";
-import { colors, typography, spacing, borderRadius } from "../styles/theme";
+import { colors, typography, spacing } from "../styles/theme";
 import Button from "./common/Button";
 import Card from "./common/Card";
 import Input from "./common/Input";
+import { useGame } from "../context/GameContext";
 
 const Home = () => {
+  const { createRoom, joinRoom } = useGame();
   const [nickname, setNickname] = useState("");
   const [roomId, setRoomId] = useState("");
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const containerStyles = {
     minHeight: "100vh",
@@ -69,18 +72,52 @@ const Home = () => {
     return null;
   };
 
-  const handleCreateRoom = () => {
+  const handleCreateRoom = async () => {
     const nicknameError = validateNickname();
-    setErrors((prev) => ({ ...prev, nickname: nicknameError }));
+    if (nicknameError) {
+      setErrors((prev) => ({ ...prev, nickname: nicknameError }));
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await createRoom(nickname);
+    } catch (error) {
+      setErrors((prev) => ({
+        ...prev,
+        submit: error.message || "Failed to create room",
+      }));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = async () => {
     const nicknameError = validateNickname();
     const roomIdError = validateRoomId();
-    setErrors({
-      nickname: nicknameError,
-      roomId: roomIdError,
-    });
+
+    if (nicknameError || roomIdError) {
+      setErrors({
+        nickname: nicknameError,
+        roomId: roomIdError,
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await joinRoom(nickname, roomId);
+    } catch (error) {
+      let errorMessage = "Failed to join room";
+      if (error.message === "Room not found") {
+        errorMessage = "Room not found. Please check the room ID.";
+      } else if (error.message === "Game has already started") {
+        errorMessage = "Cannot join - game has already started.";
+      }
+      setErrors((prev) => ({ ...prev, submit: errorMessage }));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleNicknameChange = (e) => {
@@ -115,15 +152,15 @@ const Home = () => {
         </p>
       </header>
 
-      <Card padding="6" className="main-card">
+      <Card>
         <div style={formStyles}>
           <Input
             id="nickname"
             label="Nickname"
             value={nickname}
             onChange={handleNicknameChange}
-            required
             error={errors.nickname}
+            required
           />
 
           <Input
@@ -134,27 +171,28 @@ const Home = () => {
             error={errors.roomId}
           />
 
+          {errors.submit && (
+            <div style={{ color: colors.error, marginTop: spacing[2] }}>
+              {errors.submit}
+            </div>
+          )}
+
           <div style={buttonGroupStyles}>
             <Button
-              variant="primary"
-              size="lg"
-              fullWidth
               onClick={handleCreateRoom}
-              disabled={!nickname}
+              disabled={!nickname || isLoading}
               tooltip={getCreateButtonTooltip()}
-              data-testid="create-room-button"
+              loading={isLoading}
             >
               Create Room
             </Button>
 
             <Button
-              variant="outline"
-              size="lg"
-              fullWidth
+              variant="secondary"
               onClick={handleJoinRoom}
-              disabled={!nickname || !roomId}
+              disabled={!nickname || !roomId || isLoading}
               tooltip={getJoinButtonTooltip()}
-              data-testid="join-room-button"
+              loading={isLoading}
             >
               Join Room
             </Button>

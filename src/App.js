@@ -1,8 +1,19 @@
 import React from "react";
 import Home from "./components/Home";
+import Game from "./components/Game";
+import { GameProvider, useGame } from "./context/GameContext";
 
-function App() {
-  return <Home />;
-}
+const AppContent = () => {
+  const { gameState } = useGame();
+  return gameState.roomId ? <Game /> : <Home />;
+};
+
+const App = () => {
+  return (
+    <GameProvider>
+      <AppContent />
+    </GameProvider>
+  );
+};
 
 export default App;
