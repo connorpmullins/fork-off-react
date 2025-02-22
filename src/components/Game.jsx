@@ -10,10 +10,16 @@ const WritingPhase = ({ submitStory }) => {
   const [story, setStory] = React.useState("");
   const [error, setError] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const CHARACTER_LIMIT = 200;
 
   const handleSubmit = async () => {
     if (!story.trim()) {
       setError("Please write a story before submitting");
+      return;
+    }
+
+    if (story.length > CHARACTER_LIMIT) {
+      setError(`Your story must be ${CHARACTER_LIMIT} characters or less`);
       return;
     }
 
@@ -30,13 +36,19 @@ const WritingPhase = ({ submitStory }) => {
 
   return (
     <Card>
-      <h2 style={{ ...typography.heading2, marginBottom: spacing[4] }}>
-        Write Your Story
+      <h2 style={{ ...typography.heading2, marginBottom: spacing[2] }}>
+        Start Your Story
       </h2>
-      <p style={{ color: colors.neutral.gray600, marginBottom: spacing[4] }}>
-        Write an engaging opening to your story. Make it interesting enough for
-        others to continue!
-      </p>
+      <div style={{ marginBottom: spacing[6] }}>
+        <p style={{ color: colors.neutral.gray600, marginBottom: spacing[2] }}>
+          Write the opening sentence that will kick off this story. Make it
+          interesting - this is what everyone will build upon!
+        </p>
+        <p style={{ color: colors.neutral.gray600, marginBottom: spacing[2] }}>
+          Your sentence will be used to generate the first set of story
+          variations that players can vote on.
+        </p>
+      </div>
       <Input
         multiline
         rows={4}
@@ -46,8 +58,23 @@ const WritingPhase = ({ submitStory }) => {
           setError("");
         }}
         placeholder="Once upon a time..."
+        maxLength={CHARACTER_LIMIT}
         style={{ marginBottom: error ? spacing[2] : spacing[4] }}
       />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: error ? spacing[2] : spacing[4],
+          color:
+            story.length > CHARACTER_LIMIT * 0.8
+              ? colors.error
+              : colors.neutral.gray600,
+          fontSize: typography.fontSize.sm,
+        }}
+      >
+        {story.length}/{CHARACTER_LIMIT}
+      </div>
       {error && (
         <p
           style={{
@@ -61,11 +88,13 @@ const WritingPhase = ({ submitStory }) => {
       )}
       <Button
         onClick={handleSubmit}
-        disabled={!story.trim() || isSubmitting}
+        disabled={
+          !story.trim() || isSubmitting || story.length > CHARACTER_LIMIT
+        }
         loading={isSubmitting}
         style={{ width: "100%" }}
       >
-        {isSubmitting ? "Generating Variations..." : "Submit Story"}
+        {isSubmitting ? "Generating Story Variations..." : "Submit Opening"}
       </Button>
     </Card>
   );
@@ -271,13 +300,45 @@ const Game = () => {
   const containerStyles = {
     minHeight: "100vh",
     backgroundColor: colors.neutral.background,
+    display: "flex",
+    flexDirection: "column",
+  };
+
+  const headerStyles = {
+    width: "100%",
+    padding: `${spacing[4]} ${spacing[8]}`,
+    borderBottom: `1px solid ${colors.neutral.gray200}`,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: colors.white,
+  };
+
+  const headerInfoStyles = {
+    display: "flex",
+    flexDirection: "column",
+    gap: spacing[1],
+  };
+
+  const roomIdStyles = {
+    ...typography.heading3,
+    color: colors.neutral.gray900,
+  };
+
+  const nicknameStyles = {
+    ...typography.body,
+    color: colors.neutral.gray600,
+  };
+
+  const contentStyles = {
+    flex: 1,
     padding: spacing[8],
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
   };
 
-  const contentStyles = {
+  const mainContentStyles = {
     width: "100%",
     maxWidth: "800px",
   };
@@ -328,22 +389,18 @@ const Game = () => {
 
   return (
     <div style={containerStyles}>
-      <header style={{ marginBottom: spacing[8], textAlign: "center" }}>
-        <h1 style={{ ...typography.heading1, marginBottom: spacing[2] }}>
-          Game Room: {roomId}
-        </h1>
-        <p style={{ ...typography.body1, color: colors.neutral.gray600 }}>
-          Playing as: {nickname}
-        </p>
-      </header>
-
-      <main style={contentStyles}>{renderPhase()}</main>
-
-      <footer style={{ marginTop: spacing[8] }}>
-        <Button variant="secondary" onClick={leaveRoom}>
+      <div style={headerStyles}>
+        <div style={headerInfoStyles}>
+          <h1 style={roomIdStyles}>Game Room: {roomId}</h1>
+          <p style={nicknameStyles}>Playing as {nickname}</p>
+        </div>
+        <Button onClick={leaveRoom} variant="secondary">
           Leave Room
         </Button>
-      </footer>
+      </div>
+      <div style={contentStyles}>
+        <div style={mainContentStyles}>{renderPhase()}</div>
+      </div>
     </div>
   );
 };
