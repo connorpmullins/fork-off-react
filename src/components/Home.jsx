@@ -42,14 +42,37 @@ const Home = () => {
 
   const formStyles = {
     width: "100%",
-    maxWidth: "400px",
+    maxWidth: "900px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
   };
 
-  const buttonGroupStyles = {
+  const nicknameContainerStyles = {
+    width: "100%",
+    maxWidth: "400px",
+    marginBottom: spacing[6],
+    textAlign: "center",
+  };
+
+  const sectionsContainerStyles = {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
-    gap: spacing[4],
-    marginTop: spacing[6],
+    gap: spacing[6],
+    width: "100%",
+  };
+
+  const sectionContentStyles = {
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+  };
+
+  const sectionTitleStyles = {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.semibold,
+    marginBottom: spacing[4],
+    color: colors.neutral.gray900,
   };
 
   const validateNickname = () => {
@@ -122,23 +145,12 @@ const Home = () => {
 
   const handleNicknameChange = (e) => {
     setNickname(e.target.value);
-    setErrors((prev) => ({ ...prev, nickname: null }));
+    setErrors((prev) => ({ ...prev, nickname: null, submit: null }));
   };
 
   const handleRoomIdChange = (e) => {
     setRoomId(e.target.value);
-    setErrors((prev) => ({ ...prev, roomId: null }));
-  };
-
-  const getCreateButtonTooltip = () => {
-    if (!nickname) return "Please enter a nickname";
-    return null;
-  };
-
-  const getJoinButtonTooltip = () => {
-    if (!nickname) return "Please enter a nickname";
-    if (!roomId) return "Please enter a room ID";
-    return null;
+    setErrors((prev) => ({ ...prev, roomId: null, submit: null }));
   };
 
   return (
@@ -152,53 +164,90 @@ const Home = () => {
         </p>
       </header>
 
-      <Card>
-        <div style={formStyles}>
+      <div style={formStyles}>
+        <div style={nicknameContainerStyles}>
           <Input
             id="nickname"
-            label="Nickname"
+            label="Your Nickname"
             value={nickname}
             onChange={handleNicknameChange}
             error={errors.nickname}
             required
           />
-
-          <Input
-            id="room-id"
-            label="Room ID (optional for creating)"
-            value={roomId}
-            onChange={handleRoomIdChange}
-            error={errors.roomId}
-          />
-
-          {errors.submit && (
-            <div style={{ color: colors.error, marginTop: spacing[2] }}>
-              {errors.submit}
-            </div>
-          )}
-
-          <div style={buttonGroupStyles}>
-            <Button
-              onClick={handleCreateRoom}
-              disabled={!nickname || isLoading}
-              tooltip={getCreateButtonTooltip()}
-              loading={isLoading}
-            >
-              Create Room
-            </Button>
-
-            <Button
-              variant="secondary"
-              onClick={handleJoinRoom}
-              disabled={!nickname || !roomId || isLoading}
-              tooltip={getJoinButtonTooltip()}
-              loading={isLoading}
-            >
-              Join Room
-            </Button>
-          </div>
         </div>
-      </Card>
+
+        {errors.submit && (
+          <div
+            style={{
+              color: colors.error,
+              marginBottom: spacing[4],
+              textAlign: "center",
+            }}
+          >
+            {errors.submit}
+          </div>
+        )}
+
+        <div style={sectionsContainerStyles}>
+          <Card elevation="lg">
+            <div style={sectionContentStyles}>
+              <h2 style={sectionTitleStyles}>Create a New Room</h2>
+              <p
+                style={{
+                  color: colors.neutral.gray600,
+                  marginBottom: spacing[4],
+                }}
+              >
+                Start a new game and invite your friends to join.
+              </p>
+              <div style={{ marginTop: "auto" }}>
+                <Button
+                  onClick={handleCreateRoom}
+                  disabled={!nickname || isLoading}
+                  loading={isLoading}
+                  style={{ width: "100%" }}
+                >
+                  Create Room
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          <Card elevation="lg">
+            <div style={sectionContentStyles}>
+              <h2 style={sectionTitleStyles}>Join an Existing Room</h2>
+              <p
+                style={{
+                  color: colors.neutral.gray600,
+                  marginBottom: spacing[4],
+                }}
+              >
+                Enter a room code to join your friends.
+              </p>
+              <Input
+                id="room-id"
+                label="Room Code"
+                value={roomId}
+                onChange={handleRoomIdChange}
+                error={errors.roomId}
+                required
+                style={{ marginBottom: spacing[4] }}
+              />
+              <div style={{ marginTop: "auto" }}>
+                <Button
+                  variant="secondary"
+                  onClick={handleJoinRoom}
+                  disabled={!nickname || !roomId || isLoading}
+                  loading={isLoading}
+                  style={{ width: "100%" }}
+                >
+                  Join Room
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

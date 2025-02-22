@@ -154,17 +154,45 @@ export const GameProvider = ({ children }) => {
       }
 
       const roomData = roomSnap.data();
-      if (roomData.gameStarted) {
+      // Check if player already exists in the room
+      const existingPlayer = roomData.players.find(
+        (p) => p.nickname === nickname
+      );
+
+      if (roomData.gameStarted && !existingPlayer) {
         throw new Error("Game has already started");
       }
 
+      if (existingPlayer) {
+        // If player exists, just update the local state
+        setGameState({
+          roomId,
+          nickname,
+          isHost: existingPlayer.isHost,
+          players: roomData.players,
+          gameStarted: roomData.gameStarted,
+          phase: roomData.phase || "lobby",
+          currentStory: roomData.currentStory || "",
+          forks: roomData.forks || [],
+          votes: roomData.votes || {},
+          roundTimer: roomData.roundTimer || null,
+          config: roomData.config || {
+            numberOfRounds: 3,
+            storyStyle: "",
+            basePrompt: "",
+            variance: 5,
+          },
+        });
+        return;
+      }
+
+      // If player doesn't exist and game hasn't started, add them as new
       const newPlayer = {
         id: Date.now(),
         nickname,
         isHost: false,
       };
 
-      // Add the new player to the room
       await updateDoc(roomRef, {
         players: arrayUnion(newPlayer),
       });
@@ -198,18 +226,8 @@ export const GameProvider = ({ children }) => {
 
     try {
       const roomRef = doc(db, "rooms", gameState.roomId);
-      const currentPlayer = gameState.players.find(
-        (p) => p.nickname === gameState.nickname
-      );
 
-      if (currentPlayer) {
-        await updateDoc(roomRef, {
-          players: arrayRemove(currentPlayer),
-        });
-      }
-
-      // If the leaving player is the host and there are other players,
-      // make the next player the host
+      // Only update host if current player is host
       if (gameState.isHost) {
         const roomSnap = await getDoc(roomRef);
         const roomData = roomSnap.data();
@@ -218,15 +236,16 @@ export const GameProvider = ({ children }) => {
         );
 
         if (remainingPlayers.length > 0) {
-          const newPlayers = remainingPlayers.map((p, i) => ({
+          const newPlayers = roomData.players.map((p) => ({
             ...p,
-            isHost: i === 0,
+            isHost: p.nickname === remainingPlayers[0].nickname,
           }));
 
           await updateDoc(roomRef, { players: newPlayers });
         }
       }
 
+      // Reset local state
       setGameState({
         roomId: null,
         nickname: null,
