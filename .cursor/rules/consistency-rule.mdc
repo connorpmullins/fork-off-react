@@ -1,0 +1,7 @@
+---
+description: Always reference game overview and technical overview for consistency
+globs: *.tsx, *.jsx, *.js, *.ts
+---
+
+# Your rule content
+Always review [GameOverview.md](mdc:documentation/GameOverview.md) and [TechnicalOverview.md](mdc:documentation/TechnicalOverview.md) when updating functionality. We want to use these as a source of truth for all feature development!

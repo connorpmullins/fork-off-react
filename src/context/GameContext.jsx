@@ -27,6 +27,17 @@ export const GameProvider = ({ children }) => {
     isHost: false,
     players: [],
     gameStarted: false,
+    phase: "lobby", // 'lobby', 'writing', 'forking', 'voting', 'results'
+    currentStory: "",
+    forks: [],
+    votes: {},
+    roundTimer: null,
+    config: {
+      numberOfRounds: 3,
+      storyStyle: "",
+      basePrompt: "",
+      variance: 5,
+    },
   });
 
   // Subscribe to room updates when in a room
@@ -42,6 +53,12 @@ export const GameProvider = ({ children }) => {
             ...prev,
             players: data.players,
             gameStarted: data.gameStarted,
+            config: data.config,
+            phase: data.phase || prev.phase,
+            currentStory: data.currentStory || prev.currentStory,
+            forks: data.forks || prev.forks,
+            votes: data.votes || prev.votes,
+            roundTimer: data.roundTimer || prev.roundTimer,
           }));
         }
       }
@@ -52,14 +69,18 @@ export const GameProvider = ({ children }) => {
 
   const createRoom = async (nickname) => {
     try {
-      // Generate a random room ID
       const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
       const roomRef = doc(db, "rooms", roomId);
 
-      // Create the room document
+      // Create the room document with default config
       await setDoc(roomRef, {
         createdAt: new Date(),
         gameStarted: false,
+        phase: "lobby",
+        currentStory: "",
+        forks: [],
+        votes: {},
+        roundTimer: null,
         players: [
           {
             id: Date.now(),
@@ -67,6 +88,12 @@ export const GameProvider = ({ children }) => {
             isHost: true,
           },
         ],
+        config: {
+          numberOfRounds: 3,
+          storyStyle: "",
+          basePrompt: "",
+          variance: 5,
+        },
       });
 
       setGameState({
@@ -81,12 +108,39 @@ export const GameProvider = ({ children }) => {
           },
         ],
         gameStarted: false,
+        phase: "lobby",
+        currentStory: "",
+        forks: [],
+        votes: {},
+        roundTimer: null,
+        config: {
+          numberOfRounds: 3,
+          storyStyle: "",
+          basePrompt: "",
+          variance: 5,
+        },
       });
 
       return roomId;
     } catch (error) {
       console.error("Error creating room:", error);
       throw new Error("Failed to create room");
+    }
+  };
+
+  const updateRoomConfig = async (config) => {
+    if (!gameState.isHost || !gameState.roomId) return;
+
+    try {
+      const roomRef = doc(db, "rooms", gameState.roomId);
+      await updateDoc(roomRef, { config });
+      setGameState((prev) => ({
+        ...prev,
+        config,
+      }));
+    } catch (error) {
+      console.error("Error updating room config:", error);
+      throw error;
     }
   };
 
@@ -121,6 +175,17 @@ export const GameProvider = ({ children }) => {
         isHost: false,
         players: [...roomData.players, newPlayer],
         gameStarted: roomData.gameStarted,
+        phase: roomData.phase || "lobby",
+        currentStory: roomData.currentStory || "",
+        forks: roomData.forks || [],
+        votes: roomData.votes || {},
+        roundTimer: roomData.roundTimer || null,
+        config: roomData.config || {
+          numberOfRounds: 3,
+          storyStyle: "",
+          basePrompt: "",
+          variance: 5,
+        },
       });
     } catch (error) {
       console.error("Error joining room:", error);
@@ -168,6 +233,17 @@ export const GameProvider = ({ children }) => {
         isHost: false,
         players: [],
         gameStarted: false,
+        phase: "lobby",
+        currentStory: "",
+        forks: [],
+        votes: {},
+        roundTimer: null,
+        config: {
+          numberOfRounds: 3,
+          storyStyle: "",
+          basePrompt: "",
+          variance: 5,
+        },
       });
     } catch (error) {
       console.error("Error leaving room:", error);
@@ -175,9 +251,116 @@ export const GameProvider = ({ children }) => {
     }
   };
 
+  const startGame = async () => {
+    if (!gameState.isHost || !gameState.roomId) return;
+
+    try {
+      const roomRef = doc(db, "rooms", gameState.roomId);
+
+      // Get a random player to be the first story writer
+      const storyWriter =
+        gameState.players[Math.floor(Math.random() * gameState.players.length)];
+
+      await updateDoc(roomRef, {
+        gameStarted: true,
+        phase: "writing",
+        currentStory: "",
+        forks: [],
+        votes: {},
+        roundTimer: Date.now() + 120000, // 2 minutes for writing phase
+        currentRound: 1,
+        storyWriter: storyWriter.nickname,
+      });
+    } catch (error) {
+      console.error("Error starting game:", error);
+      throw error;
+    }
+  };
+
+  const submitStory = async (story) => {
+    if (!gameState.roomId || gameState.phase !== "writing") return;
+
+    try {
+      const roomRef = doc(db, "rooms", gameState.roomId);
+      await updateDoc(roomRef, {
+        currentStory: story,
+        phase: "forking",
+        roundTimer: Date.now() + 90000, // 1.5 minutes for forking phase
+      });
+    } catch (error) {
+      console.error("Error submitting story:", error);
+      throw error;
+    }
+  };
+
+  const submitFork = async (fork) => {
+    if (!gameState.roomId || gameState.phase !== "forking") return;
+
+    try {
+      const roomRef = doc(db, "rooms", gameState.roomId);
+      await updateDoc(roomRef, {
+        forks: arrayUnion({
+          id: Date.now(),
+          text: fork,
+          author: gameState.nickname,
+        }),
+      });
+
+      // If all players have submitted forks, move to voting phase
+      const roomSnap = await getDoc(roomRef);
+      const roomData = roomSnap.data();
+      if (roomData.forks.length === roomData.players.length - 1) {
+        // -1 because story writer doesn't fork
+        await updateDoc(roomRef, {
+          phase: "voting",
+          roundTimer: Date.now() + 60000, // 1 minute for voting phase
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting fork:", error);
+      throw error;
+    }
+  };
+
+  const submitVote = async (forkId) => {
+    if (!gameState.roomId || gameState.phase !== "voting") return;
+
+    try {
+      const roomRef = doc(db, "rooms", gameState.roomId);
+      const votes = { ...gameState.votes };
+      votes[gameState.nickname] = forkId;
+
+      await updateDoc(roomRef, { votes });
+
+      // If all players have voted, move to results phase
+      const roomSnap = await getDoc(roomRef);
+      const roomData = roomSnap.data();
+      if (Object.keys(roomData.votes).length === roomData.players.length - 1) {
+        // -1 because story writer doesn't vote
+        await updateDoc(roomRef, {
+          phase: "results",
+          gameStarted: false, // End the game
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting vote:", error);
+      throw error;
+    }
+  };
+
   return (
     <GameContext.Provider
-      value={{ gameState, createRoom, joinRoom, leaveRoom }}
+      value={{
+        gameState,
+        createRoom,
+        joinRoom,
+        leaveRoom,
+        startGame,
+        submitStory,
+        submitFork,
+        submitVote,
+        updateRoomConfig,
+      }}
     >
       {children}
     </GameContext.Provider>
