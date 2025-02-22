@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "5.17.0",
-    "@testing-library/react": "13.4.0",
-    "@testing-library/user-event": "13.5.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/jest": "29.5.14",
     "@types/node": "22.9.3",
     "@types/react": "18.3.12",
@@ -23,6 +23,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:react": "jest --selectProjects react",
+    "test:rules": "firebase emulators:exec --only firestore 'jest --selectProjects firestore --detectOpenHandles --testTimeout=30000'",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -45,6 +47,14 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "7.21.11",
-    "prettier": "3.3.3"
+    "@firebase/rules-unit-testing": "4.0.1",
+    "@firebase/testing": "0.20.11",
+    "cypress": "14.0.3",
+    "identity-obj-proxy": "3.0.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "msw": "2.7.1",
+    "prettier": "3.3.3",
+    "supertest": "7.0.0",
+    "ts-jest": "29.2.5"
   }
 }

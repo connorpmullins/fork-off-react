@@ -19,5 +19,20 @@
   "firestore": {
     "rules": "firebase/firestore.rules",
     "indexes": "firebase/firestore.indexes.json"
+  },
+  "emulators": {
+    "firestore": {
+      "port": 9150
+    },
+    "hosting": {
+      "port": 5002
+    },
+    "functions": {
+      "port": 5001
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
   }
 }
