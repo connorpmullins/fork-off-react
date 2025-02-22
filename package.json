@@ -26,7 +26,10 @@
     "test:react": "jest --selectProjects react",
     "test:rules": "firebase emulators:exec --only firestore 'jest --selectProjects firestore --detectOpenHandles --testTimeout=30000'",
     "eject": "react-scripts eject",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "lint": "eslint src/**/*.{js,jsx,ts,tsx}",
+    "lint:fix": "eslint src/**/*.{js,jsx,ts,tsx} --fix",
+    "format": "prettier --write src/**/*.{js,jsx,ts,tsx,json,css,scss,md}"
   },
   "eslintConfig": {
     "extends": [
