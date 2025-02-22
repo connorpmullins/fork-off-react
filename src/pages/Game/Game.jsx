@@ -1,10 +1,10 @@
 import React from "react";
-import { useGame } from "../context/GameContext";
-import Button from "./common/Button";
-import Card from "./common/Card";
-import Input from "./common/Input";
-import WaitingRoom from "./WaitingRoom";
-import { colors, typography, spacing } from "../styles/theme";
+import { useGame } from "../../context/GameContext";
+import Button from "../../components/common/Button";
+import Card from "../../components/common/Card";
+import Input from "../../components/common/Input";
+import WaitingRoom from "../../components/WaitingRoom";
+import { colors, typography, spacing } from "../../styles/theme";
 
 const WritingPhase = ({ submitStory }) => {
   const [story, setStory] = React.useState("");
@@ -100,14 +100,109 @@ const WritingPhase = ({ submitStory }) => {
   );
 };
 
+const StoryVariation = ({ fork, isSelected, onSelect, votes, onVote }) => {
+  return (
+    <div
+      style={{
+        padding: spacing[4],
+        marginBottom: spacing[2],
+        border: `2px solid ${isSelected ? colors.primary[500] : colors.neutral.gray200}`,
+        borderRadius: spacing[2],
+        backgroundColor: isSelected ? colors.primary[50] : colors.white,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: spacing[2],
+        }}
+      >
+        <div style={{ flex: 1 }}>{fork.text}</div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: spacing[2],
+            marginLeft: spacing[4],
+            borderLeft: `1px solid ${colors.neutral.gray200}`,
+            paddingLeft: spacing[4],
+          }}
+        >
+          <Button
+            variant="secondary"
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (votes > 0) onVote(fork.id, -1);
+            }}
+            disabled={!votes || votes === 0}
+          >
+            -
+          </Button>
+          <span
+            style={{
+              minWidth: "2rem",
+              textAlign: "center",
+              color: colors.neutral.gray600,
+            }}
+          >
+            {votes || 0}
+          </span>
+          <Button
+            variant="secondary"
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              onVote(fork.id, 1);
+            }}
+            disabled={votes >= 3}
+          >
+            +
+          </Button>
+        </div>
+      </div>
+      <Button
+        variant="secondary"
+        size="small"
+        onClick={() => onSelect(fork)}
+        style={{ width: "100%" }}
+      >
+        Continue with this variation
+      </Button>
+    </div>
+  );
+};
+
 const ForkingPhase = ({ currentStory, submitFork, forks }) => {
   const [selectedFork, setSelectedFork] = React.useState(null);
   const [modifiedFork, setModifiedFork] = React.useState("");
+  const [votesByFork, setVotesByFork] = React.useState({});
+  const totalVotes = Object.values(votesByFork).reduce(
+    (sum, count) => sum + count,
+    0
+  );
+
+  const handleVote = (forkId, change) => {
+    if (totalVotes + change > 3) return; // Max 3 votes total
+    if (change < 0 && (!votesByFork[forkId] || votesByFork[forkId] === 0))
+      return;
+
+    setVotesByFork((prev) => ({
+      ...prev,
+      [forkId]: Math.max(0, (prev[forkId] || 0) + change),
+    }));
+  };
+
+  const handleSelectFork = (fork) => {
+    setSelectedFork(fork.id);
+    setModifiedFork(fork.text);
+  };
 
   return (
     <Card>
       <h2 style={{ ...typography.heading2, marginBottom: spacing[4] }}>
-        Create Your Fork
+        Continue the Story
       </h2>
       <div
         style={{
@@ -121,44 +216,50 @@ const ForkingPhase = ({ currentStory, submitFork, forks }) => {
       </div>
 
       <div style={{ marginBottom: spacing[4] }}>
-        <h3 style={{ ...typography.heading3, marginBottom: spacing[3] }}>
-          AI Suggestions
-        </h3>
-        <p style={{ color: colors.neutral.gray600, marginBottom: spacing[4] }}>
-          Select a suggestion to modify, or write your own fork from scratch.
-        </p>
-        {forks.map((fork) => (
-          <div
-            key={fork.id}
-            onClick={() => {
-              setSelectedFork(fork.id);
-              setModifiedFork(fork.text);
-            }}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            marginBottom: spacing[3],
+          }}
+        >
+          <h3 style={{ ...typography.heading3 }}>Story Variations</h3>
+          <span
             style={{
-              padding: spacing[4],
-              marginBottom: spacing[2],
-              border: `2px solid ${selectedFork === fork.id ? colors.primary[500] : colors.neutral.gray200}`,
-              borderRadius: spacing[2],
-              cursor: "pointer",
-              backgroundColor:
-                selectedFork === fork.id ? colors.primary[50] : colors.white,
+              color: colors.neutral.gray600,
+              fontSize: typography.fontSize.sm,
             }}
           >
-            {fork.text}
-          </div>
+            Votes remaining: {3 - totalVotes}
+          </span>
+        </div>
+        <p style={{ color: colors.neutral.gray600, marginBottom: spacing[4] }}>
+          Vote for your favorite variations (up to 3 votes) and choose one to
+          continue with.
+        </p>
+        {forks.map((fork) => (
+          <StoryVariation
+            key={fork.id}
+            fork={fork}
+            isSelected={selectedFork === fork.id}
+            onSelect={handleSelectFork}
+            votes={votesByFork[fork.id]}
+            onVote={handleVote}
+          />
         ))}
       </div>
 
       <div style={{ marginBottom: spacing[4] }}>
         <h3 style={{ ...typography.heading3, marginBottom: spacing[3] }}>
-          Your Fork
+          Your Continuation
         </h3>
         <Input
           multiline
           rows={4}
           value={modifiedFork}
           onChange={(e) => setModifiedFork(e.target.value)}
-          placeholder="Write your own fork or modify the selected suggestion..."
+          placeholder="Continue the story in your own way..."
           style={{ marginBottom: spacing[4] }}
         />
       </div>
@@ -168,7 +269,7 @@ const ForkingPhase = ({ currentStory, submitFork, forks }) => {
         disabled={!modifiedFork.trim()}
         style={{ width: "100%" }}
       >
-        Submit Fork
+        Submit Continuation
       </Button>
     </Card>
   );

@@ -2,7 +2,6 @@ const { onCall } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const { https } = require("firebase-functions");
 const admin = require("firebase-admin");
-const { getFirestore } = require("firebase-admin/firestore");
 const OpenAI = require("openai");
 
 // Initialize Firebase Admin

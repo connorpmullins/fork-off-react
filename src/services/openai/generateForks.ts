@@ -13,12 +13,13 @@ const generateForksCallable = httpsCallable(functions, "generateStoryForks");
 export const generateForks = async (
   context: string,
   options: {
-    tone?: string;
-    temperature?: number;
-    maxTokens?: number;
-    forksCount?: number;
-  } = {}
+    tone: string;
+    temperature: number;
+    maxTokens: number;
+    forksCount: number;
+  }
 ): Promise<string[]> => {
+  const { tone, temperature, maxTokens, forksCount } = options;
   console.log("[generateForks] Starting fork generation:", {
     contextLength: context?.length,
     options,
@@ -29,14 +30,6 @@ export const generateForks = async (
     console.error("[generateForks] Invalid context:", { context });
     throw new Error("Story context must be a non-empty string");
   }
-
-  // Set default values for options
-  const {
-    tone = "funny",
-    temperature = 0.7,
-    maxTokens = 100,
-    forksCount = 5,
-  } = options;
 
   console.log("[generateForks] Using options:", {
     tone,

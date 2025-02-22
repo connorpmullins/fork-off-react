@@ -6,7 +6,6 @@ import {
   getDoc,
   updateDoc,
   arrayUnion,
-  arrayRemove,
   onSnapshot,
 } from "firebase/firestore";
 import { generateForks } from "../services/openai";
@@ -321,7 +320,7 @@ export const GameProvider = ({ children }) => {
 
       // Then generate forks based on the story and game config
       const forkOptions = {
-        tone: gameState.config.storyStyle || "funny",
+        tone: gameState.config.storyStyle,
         temperature: Math.max(0.1, Math.min(1, gameState.config.variance / 10)),
         forksCount: forkCount,
       };

@@ -111,25 +111,25 @@ const useStory = (
 
   // Function to add forks
   const addFork = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const context = story.join(" ");
-      const generatedForks = await generateForks(context);
-      const formattedForks = generatedForks.map(
-        (content: string, index: number) => ({
-          id: `${Date.now()}-${index}`,
-          content,
-          votes: 0,
-        })
-      );
-      setForks(formattedForks);
-    } catch (err) {
-      console.error("Error generating forks:", err);
-      setError("Failed to generate story forks. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    // setLoading(true);
+    // setError(null);
+    // try {
+    //   const context = story.join(" ");
+    //   const generatedForks = await generateForks(context);
+    //   const formattedForks = generatedForks.map(
+    //     (content: string, index: number) => ({
+    //       id: `${Date.now()}-${index}`,
+    //       content,
+    //       votes: 0,
+    //     })
+    //   );
+    //   setForks(formattedForks);
+    // } catch (err) {
+    //   console.error("Error generating forks:", err);
+    //   setError("Failed to generate story forks. Please try again.");
+    // } finally {
+    //   setLoading(false);
+    // }
   }, [story]);
 
   // Function to select a fork

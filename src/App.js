@@ -1,6 +1,6 @@
 import React from "react";
 import Home from "./components/Home";
-import Game from "./components/Game";
+import Game from "./pages/Game";
 import { GameProvider, useGame } from "./context/GameContext";
 
 const AppContent = () => {

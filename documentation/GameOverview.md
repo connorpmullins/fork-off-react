@@ -1,85 +1,205 @@
-# What is Fork-off?
+# Architectural Overview of Fork-Off
 
-- Fork-Off is a collaborative, text-based storytelling game designed for group fun, focusing on humor and creative storytelling.
-- Players work together to create a branching narrative by voting on different story paths, leading to unexpected twists, hilarious outcomes, and a unique story experience.
+## Tech Stack:
 
-# How to Play Fork-Off:
+1. **Frontend**:
 
-### Room Creation:
+   - **React**: Provides a dynamic user interface for room management, voting, and displaying story progression.
+   - **Axios**: Handles API requests, including communication with Firebase Functions and OpenAI for story generation.
 
-- One player creates a room
-- They can invite people to join (by sharing the code)
-- They set the number of rounds
-- They can set the style of the story for the storytelling engine
-- They configure the amount of variance introduced in each round of forking
-  - Variance goes from 1 - 10
-  - Example of how two forks given the starting sentence "Jamie climbed to the top of a tree."
-    - Variance 1:
-      - "At the tree-top, Jamie found an apple and bit into it"
-      - "At the tree-top, Jamie found a pear and threw it as far as he could"
-    - Variance 10:
-      - "At the tree-top, Jamie found an apple and bit into it"
-      - "At the tree-top, Jamie turned into a bird and went looking for a mate"
-- Once all players have joined, the user who created the round can start the game.
+2. **Backend**:
 
-### The First Round:
+   - **Firebase Firestore**: Stores game state, including rooms, story branches, votes, and player details.
+   - **Firebase Realtime Database/Listeners**: Enables real-time updates for game state synchronization.
+   - **Firebase Functions**: Handles secure API calls to OpenAI for text generation and encapsulates backend logic (e.g., preventing client-side exposure of sensitive keys).
 
-- Once the game starts, each player has:
-  - To enter a phrase that they want to influence the beginning of the story
-  - To enter a phrase that the want to influence the first fork
-  - To enter a phrase that they want to influnce (another) first fork
-- Once the time runs out or all answers are submitted, Fork-off uses the responses to generate an origin sentence and one fork per player (by combining two prompts)
+3. **External APIs**:
 
-### Following Rounds:
+   - **OpenAI GPT**: Generates story forks based on player-provided input and the current story context.
 
-1. Players are assigned two forks from the previous round to create prompts for
-   1a. Players get one minute per prompt
-2. 2n forks are generated
-3. Players vote on which forks they want to make it through to the next round
-   3a. Players get 1 vote per player in the game
-   3b. Players cannot vote for the same fork multiple times
-   3c. In case of a tie, we randomly include a fork if needed or trim one randomly depending on the situation
-4. The round concludes either when all responses are submitted or when the time limit has expired (30s per fork?)
-5. Points are awarded based on who contributed to the forks that are getting progressed
+4. **Hosting**:
+   - **Firebase Hosting**: Serves the frontend React application.
 
-### End of the Game:
+---
 
-- The story ends whenever the majority of players vote to have it end or at some maximum step count.
+## Key Features:
 
-### More Details:
+### 1. Room Management
 
-- Adjusting the room configuration
-  - At any point during gameplay, the person who created the room can adjust how many rounds they want gameplay to last, as well as the variance between rounds, and the default prompt to the storyteller
-- Story Coherence:
-  - Players can see a summary of each fork at all times
-  - Players can read the entirety of a story if they want
-- Sharing after game-play
+- **Room Creation**:
 
-# Fork-off: Current Implementation Status
+  - Players can create a room with configurable settings:
+    - **Number of forks per round** (default: 3).
+    - **Variance level** (scale: 1–10).
+  - A unique room ID is generated for joining.
+  - Room creator manages room settings and game state.
 
-## What Works Now
+- **Room Joining**:
+  - Players can join using the unique room ID.
+  - Players are identified by nicknames provided during joining.
 
-- Room Management
+---
 
-  - Create/join rooms with nickname
-  - Room code sharing
-  - Host controls & transfer
-  - Player list tracking
+### 2. Story and Fork Management
 
-- Basic Game Flow
-  - Lobby with configuration
-  - Writing phase
-  - Forking phase
-  - Voting system
-  - Results display
+- **Initial Round**:
 
-## Coming Soon
+  - Each player submits a phrase to influence the starting story.
+  - Then Fork-Off combines the submissions to generate an origin sentence and the number of forks specified.
 
-- Story engine integration
-- Multi-round gameplay
-- Point system
-- Story sharing
+- **Subsequent Rounds**:
 
-## Original Game Design
+  - Players have 120 seconds to vote on their favorite forks and submit a phrase for the next round.
+    - Once all players have voted and submitted or time is up, the round ends.
+    - Players have **3 votes**, which can be distributed across multiple forks or used on a single fork.
+    - Players submit a phrase to influence the next story iteration.
+  - Fork-Off generates new forks based on:
+    - Persisted forks from the previous round.
+    - Combined player input for the current round.
 
-// ... existing code ...
+- **Variance Handling**:
+
+  - Variance influences the creativity/randomness of the forks:
+    - **Low Variance**: Subtle changes (e.g., modifying objects or actions).
+    - **High Variance**: Dramatic shifts (e.g., genre changes or fantastical elements).
+
+- **Fork Pruning**:
+
+  - If fewer forks are selected than the configured maximum, Fork-Off generates additional forks per persisted story path.
+  - Tied forks are persisted beyond the maximum if needed and are pruned in subsequent rounds when possible.
+
+---
+
+### 3. Voting System
+
+- **Real-Time Voting**:
+
+  - Players vote on forks in real-time, and votes are aggregated in Firestore.
+  - Voting concludes when:
+    - All players submit their votes, or
+    - A time limit (default: 5 minutes) is reached.
+
+- **Tiebreakers**:
+  - If ties occur and exceed the maximum number of forks, all tied forks persist to the next round.
+
+---
+
+### 4. Real-Time Updates
+
+- **Firestore listeners** propagate updates to all players in a room:
+  - Synchronizes story progression, forks, and voting results.
+  - Ensures seamless UI updates as the game progresses.
+
+---
+
+### 5. Game Flow
+
+- **Round Progression**:
+
+  - Players read through the current forks.
+  - Players vote and submit suggestions for the next round.
+  - Fork-Off processes the inputs and generates new forks for the next round.
+
+- **Ending the Game**:
+  - The game ends when:
+    - The game organizer ends it
+    - A maximum step count (configurable) is reached.
+
+---
+
+### 6. Frontend UI
+
+- **Dynamic Components**:
+
+  - **Story Display**: Shows the full narrative progression (`story.join(" ")`).
+  - **Fork Display**: Shows the current forks with vote counts.
+  - **Room Settings**: Allows the room creator to adjust fork count and variance mid-game.
+
+- **Player Input**:
+
+  - Text input for nicknames and suggestion phrases.
+  - Voting buttons with real-time updates.
+
+- **Navigation**:
+  - Persistent access to the full story tree for review.
+
+---
+
+## Progress Summary:
+
+### Initial Setup:
+
+- React project created and hosted on Firebase Hosting.
+- Firebase Firestore and Functions configured.
+- OpenAI API integrated securely using Firebase Functions.
+
+---
+
+### Core Functionality:
+
+- Room creation and joining implemented.
+- Basic story progression and fork generation operational.
+- Voting system synchronized in real time.
+
+---
+
+### Game Logic:
+
+- Variance settings control fork creativity and coherence.
+- Handles ties and additional fork generation when necessary.
+- Prunes forks dynamically to maintain game balance.
+
+---
+
+### UI/UX:
+
+- Responsive, intuitive UI for room management, voting, and story exploration.
+- Real-time feedback for voting and story updates.
+
+---
+
+## Next Steps:
+
+### Optimizations:
+
+- Enhance performance of Firestore queries for large groups or long story trees.
+
+### Future Features:
+
+- Visualize story progression with branching diagrams.
+- Implement persistent room states for players to rejoin mid-game.
+
+### Open AI Response Tuning:
+
+- Determine what data we need to pass to open ai at each step to get good responses
+- This is going to be crucial to get right in order to make the game enjoyable
+
+# Technical Implementation Status
+
+## Core Features (✓ = Done)
+
+- Authentication & Room Management
+
+  - ✓ Room creation/joining
+  - ✓ Nickname-based player tracking
+  - ✓ Host management & transfer
+  - ✓ Room configuration
+
+- Game Flow
+  - ✓ Lobby system
+  - ✓ Game phases (writing, forking, voting, results)
+  - ✓ Round timer implementation
+  - Basic story engine (WIP)
+
+## Tech Stack
+
+- React (Frontend)
+- Firebase (Backend)
+- No AI integration yet
+
+## Next Steps
+
+1. Story engine integration
+2. Multi-round implementation
+3. Scoring system
+4. Results sharing
