@@ -2,270 +2,232 @@
 
 This document outlines the testing approach for Fork-Off, covering both unit tests and end-to-end testing strategies.
 
-## Testing Tools & Framework
+## Testing Infrastructure
 
-### Frontend Testing
+### Project Structure
 
-- **Jest**: Primary test runner and assertion library
-- **React Testing Library**: Component testing
-- **MSW (Mock Service Worker)**: API mocking
-- **Firebase Emulator**: Local Firebase environment
+```
+fork-off/
+├── src/
+│   ├── components/
+│   │   └── __tests__/          # React component tests
+│   └── setupTests.ts           # React testing setup
+├── tests/
+│   └── rules/                  # Firestore rules tests
+├── __mocks__/                  # Jest mocks for static assets
+├── jest.config.js              # Jest configuration
+└── tsconfig.test.json         # TypeScript config for tests
+```
 
-### Backend Testing
+### Testing Tools
 
-- **Jest**: For Firebase Functions testing
-- **Firebase Testing**: For Firestore rules and security testing
-- **Supertest**: HTTP assertions for API testing
+#### Frontend Testing
 
-### E2E Testing
+- **Jest**: Primary test runner (v29+)
+- **React Testing Library**: Component testing (v16+)
+- **@testing-library/jest-dom**: DOM assertions (v6+)
+- **@testing-library/user-event**: User interaction simulation (v14+)
 
-- **Cypress**: End-to-end testing framework
+#### Backend Testing
+
+- **@firebase/rules-unit-testing**: Firestore rules testing
 - **Firebase Emulator Suite**: Local Firebase environment
 
-## Unit Testing Structure
+### Configuration Files
 
-### 1. Frontend Components (`/src/components/__tests__`)
+#### Jest Configuration (jest.config.js)
 
-#### Room Management Tests
+```javascript
+const baseConfig = {
+  preset: "ts-jest",
+  transform: {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        tsconfig: "tsconfig.test.json",
+      },
+    ],
+  },
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
+  testEnvironment: "node",
+};
+
+module.exports = {
+  projects: [
+    {
+      ...baseConfig,
+      displayName: "react",
+      testEnvironment: "jsdom",
+      setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
+      testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}"],
+      moduleNameMapper: {
+        "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+        "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$":
+          "<rootDir>/__mocks__/fileMock.js",
+      },
+    },
+    {
+      ...baseConfig,
+      displayName: "firestore",
+      testMatch: ["<rootDir>/tests/**/*.test.{ts,tsx}"],
+    },
+  ],
+};
+```
+
+#### TypeScript Test Configuration (tsconfig.test.json)
+
+```json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest", "@testing-library/jest-dom"]
+  },
+  "include": ["src/**/*.test.ts", "src/**/*.test.tsx", "tests/**/*.test.ts"]
+}
+```
+
+## Unit Testing Examples
+
+### 1. React Component Tests
 
 ```typescript
-// RoomCreation.test.tsx
-describe("RoomCreation", () => {
-  test("creates room with valid settings", async () => {
-    // Test room creation with default settings
+// src/components/__tests__/RoomManager.test.tsx
+import React from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import { RoomManager } from "../RoomManager";
+
+describe("RoomManager", () => {
+  const mockOnCreateRoom = jest.fn();
+  const mockOnJoinRoom = jest.fn();
+  const mockSetNickname = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  test("validates fork count input", () => {
-    // Test input validation
+  it("renders nickname input and room buttons", () => {
+    render(
+      <RoomManager
+        onCreateRoom={mockOnCreateRoom}
+        onJoinRoom={mockOnJoinRoom}
+        nickname=""
+        setNickname={mockSetNickname}
+      />
+    );
+
+    expect(screen.getByPlaceholderText("Enter nickname")).toBeInTheDocument();
+    expect(screen.getByText("Create Room")).toBeInTheDocument();
+    expect(screen.getByText("Join Room")).toBeInTheDocument();
   });
 
-  test("validates variance level input", () => {
-    // Test variance bounds (1-10)
-  });
-});
-
-// RoomJoining.test.tsx
-describe("RoomJoining", () => {
-  test("joins room with valid room ID", async () => {
-    // Test room joining flow
-  });
-
-  test("handles invalid room IDs", () => {
-    // Test error handling
-  });
+  // Additional test cases...
 });
 ```
 
-#### Story Management Tests
+### 2. Firestore Rules Tests
 
 ```typescript
-// StoryDisplay.test.tsx
-describe("StoryDisplay", () => {
-  test("renders story progression correctly", () => {
-    // Test story rendering
-  });
+// tests/rules/firestore.rules.test.ts
+import {
+  assertSucceeds,
+  assertFails,
+  initializeTestEnvironment,
+  RulesTestEnvironment,
+} from "@firebase/rules-unit-testing";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import * as fs from "fs";
+import * as path from "path";
 
-  test("updates when new forks are added", () => {
-    // Test real-time updates
-  });
-});
-
-// ForkDisplay.test.tsx
-describe("ForkDisplay", () => {
-  test("displays correct number of forks", () => {
-    // Test fork rendering
-  });
-
-  test("shows vote counts accurately", () => {
-    // Test vote display
-  });
-});
-```
-
-#### Voting System Tests
-
-```typescript
-// VotingSystem.test.tsx
-describe("VotingSystem", () => {
-  test("allows multiple votes per user", () => {
-    // Test vote distribution
-  });
-
-  test("prevents exceeding max votes", () => {
-    // Test vote limit enforcement
-  });
-});
-```
-
-### 2. Backend Functions (`/functions/__tests__`)
-
-#### Story Generation Tests
-
-```typescript
-// storyGeneration.test.ts
-describe("Story Generation", () => {
-  test("generates appropriate number of forks", async () => {
-    // Test fork generation
-  });
-
-  test("respects variance settings", async () => {
-    // Test variance influence
-  });
-});
-```
-
-#### Firebase Functions Tests
-
-```typescript
-// roomManagement.test.ts
-describe("Room Management Functions", () => {
-  test("creates room with correct structure", async () => {
-    // Test room document creation
-  });
-
-  test("handles concurrent joins correctly", async () => {
-    // Test race conditions
-  });
-});
-```
-
-### 3. Firestore Rules Tests (`/tests/rules`)
-
-```typescript
-// firestore.rules.test.ts
 describe("Firestore Security Rules", () => {
-  test("allows authenticated users to create rooms", async () => {
-    // Test room creation permissions
+  let testEnv: RulesTestEnvironment;
+
+  beforeAll(async () => {
+    const rules = fs.readFileSync(
+      path.resolve(__dirname, "../../firebase/firestore.rules"),
+      "utf8",
+    );
+
+    testEnv = await initializeTestEnvironment({
+      projectId: "demo-fork-off",
+      firestore: {
+        rules,
+        host: "127.0.0.1",
+        port: 9150,
+      },
+    });
   });
 
-  test("prevents unauthorized vote modifications", async () => {
-    // Test vote security
-  });
+  // Test cases for room creation, reading, etc...
 });
 ```
 
-## End-to-End Testing
+## Running Tests
 
-### 1. Game Flow Tests (`/cypress/integration/gameFlow`)
+### Available Scripts
 
-```typescript
-// completeGame.spec.ts
-describe("Complete Game Flow", () => {
-  it("completes a full game cycle", () => {
-    // Create room
-    // Join with multiple players
-    // Submit initial phrases
-    // Vote on forks
-    // Verify story progression
-    // End game
-  });
-});
+```bash
+# Run React component tests
+npm run test:react
 
-// roomInteraction.spec.ts
-describe("Room Interaction", () => {
-  it("handles multiple users in real-time", () => {
-    // Test concurrent user interactions
-  });
-});
+# Run Firestore rules tests (requires Firebase emulator)
+npm run test:rules
+
+# Run all tests (using react-scripts)
+npm test
 ```
 
-### 2. Edge Case Tests (`/cypress/integration/edgeCases`)
-
-```typescript
-// errorHandling.spec.ts
-describe("Error Handling", () => {
-  it("handles network disconnections gracefully", () => {
-    // Test offline behavior
-  });
-
-  it("recovers from Firebase emulator restarts", () => {
-    // Test service recovery
-  });
-});
-```
-
-## Test Coverage Goals
+### Test Coverage Goals
 
 - Frontend Components: 80% coverage
-- Backend Functions: 90% coverage
 - Firestore Rules: 100% coverage
-- E2E Critical Paths: 100% coverage
-
-## CI/CD Integration
-
-1. **Pull Request Checks**
-
-   - Run unit tests
-   - Run Firestore rules tests
-   - Run critical path E2E tests
-
-2. **Deployment Checks**
-   - Run full E2E test suite
-   - Verify Firebase emulator tests
-   - Check test coverage thresholds
-
-## Local Development Testing
-
-1. **Setup Instructions**
-
-```bash
-# Install dependencies
-npm install
-
-# Start Firebase emulators
-firebase emulators:start
-
-# Run unit tests
-npm test
-
-# Run E2E tests
-npm run cypress:open
-```
-
-2. **Watch Mode Development**
-
-```bash
-# Frontend tests
-npm test -- --watch
-
-# Backend tests
-npm run test:functions -- --watch
-```
 
 ## Best Practices
 
-1. **Test Organization**
+### React Component Testing
 
-   - Group tests by feature
-   - Use descriptive test names
-   - Follow AAA pattern (Arrange, Act, Assert)
+1. Use React Testing Library's queries in this order:
 
-2. **Mocking Strategy**
+   - getByRole (most preferred)
+   - getByLabelText
+   - getByPlaceholderText
+   - getByText
+   - getByDisplayValue
+   - getByTestId (least preferred)
 
-   - Mock external services (OpenAI)
-   - Use Firebase emulator for Firestore
-   - Implement MSW for API mocking
+2. Test user interactions using `fireEvent` or `userEvent`
+3. Test component behavior, not implementation
+4. Mock external dependencies and services
 
-3. **Data Management**
-   - Reset test data between runs
-   - Use factories for test data
-   - Maintain test isolation
+### Firestore Rules Testing
+
+1. Test both successful and failed operations
+2. Test with different user contexts (authenticated, unauthenticated)
+3. Clean up data between tests
+4. Use the Firebase Emulator Suite
 
 ## Future Improvements
 
-1. **Performance Testing**
+1. **Integration Tests**
 
-   - Implement load tests for concurrent users
-   - Monitor Firebase quota usage
+   - Add tests for Firebase Functions
+   - Test component integration with Firestore
+   - Add API mocking with MSW
+
+2. **E2E Testing with Cypress**
+
+   - Implement full game flow tests
+   - Test multiplayer interactions
+   - Test real-time updates
+
+3. **Performance Testing**
+
+   - Add load tests for concurrent users
    - Test large story tree performance
+   - Monitor Firebase quota usage
 
-2. **Visual Testing**
-
-   - Add visual regression tests
-   - Implement accessibility testing
-   - Test responsive layouts
-
-3. **Security Testing**
-   - Penetration testing suite
-   - API fuzzing tests
-   - Rate limiting tests
+4. **Accessibility Testing**
+   - Add jest-axe for accessibility testing
+   - Implement keyboard navigation tests
+   - Add screen reader compatibility tests

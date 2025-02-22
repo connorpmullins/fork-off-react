@@ -1,0 +1,76 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Card matches snapshot with default props 1`] = `
+<div>
+  <div
+    class=""
+    role="none"
+    style="background-color: rgb(255, 255, 255); border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); transition: all 150ms ease-in-out; cursor: default;"
+    tabindex="-1"
+  >
+    <div>
+      Test content
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Card matches snapshot with different elevations 1`] = `
+<div>
+  <div
+    class=""
+    role="none"
+    style="background-color: rgb(255, 255, 255); border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: all 150ms ease-in-out; cursor: default;"
+    tabindex="-1"
+  >
+    <div>
+      Content
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Card matches snapshot with different elevations 2`] = `
+<div>
+  <div
+    class=""
+    role="none"
+    style="background-color: rgb(255, 255, 255); border-radius: 0.5rem; padding: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); transition: all 150ms ease-in-out; cursor: default;"
+    tabindex="-1"
+  >
+    <div>
+      Content
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Card matches snapshot with different padding sizes 1`] = `
+<div>
+  <div
+    class=""
+    role="none"
+    style="background-color: rgb(255, 255, 255); border-radius: 0.5rem; padding: 0.5rem; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); transition: all 150ms ease-in-out; cursor: default;"
+    tabindex="-1"
+  >
+    <div>
+      Content
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Card matches snapshot with different padding sizes 2`] = `
+<div>
+  <div
+    class=""
+    role="none"
+    style="background-color: rgb(255, 255, 255); border-radius: 0.5rem; padding: 2rem; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1); transition: all 150ms ease-in-out; cursor: default;"
+    tabindex="-1"
+  >
+    <div>
+      Content
+    </div>
+  </div>
+</div>
+`;
