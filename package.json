@@ -25,7 +25,8 @@
     "test": "react-scripts test",
     "test:react": "jest --selectProjects react",
     "test:rules": "firebase emulators:exec --only firestore 'jest --selectProjects firestore --detectOpenHandles --testTimeout=30000'",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "prepare": "husky install"
   },
   "eslintConfig": {
     "extends": [
@@ -50,11 +51,22 @@
     "@firebase/rules-unit-testing": "4.0.1",
     "@firebase/testing": "0.20.11",
     "cypress": "14.0.3",
+    "husky": "9.1.7",
     "identity-obj-proxy": "3.0.0",
     "jest-environment-jsdom": "^29.7.0",
+    "lint-staged": "15.4.3",
     "msw": "2.7.1",
     "prettier": "3.3.3",
     "supertest": "7.0.0",
     "ts-jest": "29.2.5"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   }
 }
