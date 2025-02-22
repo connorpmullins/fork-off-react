@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow access to all paths temporarily for development
+    match /{document=**} {
+      allow read, write: if true;
+    }
+
+    // More specific rules for your collections (for future use)
+    match /rooms/{roomId} {
+      allow read, write: if true;
+      
+      match /players/{playerId} {
+        allow read, write: if true;
+      }
+      
+      match /story/{storyId} {
+        allow read, write: if true;
+      }
+      
+      match /votes/{voteId} {
+        allow read, write: if true;
+      }
+    }
+  }
+} 

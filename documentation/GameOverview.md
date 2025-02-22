@@ -8,8 +8,9 @@
 ### Room Creation:
 
 - One player creates a room
-- They can invite people to join
-- They set the number of forks they want their story to have
+- They can invite people to join (by sharing the code)
+- They set the number of rounds
+- They can set the style of the story and any other base prompts for the storytelling engine
 - They configure the amount of variance introduced in each round of forking
   - Variance goes from 1 - 10
   - Example of how two forks given the starting sentence "Jamie climbed to the top of a tree."
@@ -23,22 +24,23 @@
 
 ### The First Round:
 
-- Once the game starts, each player has 1 minute to enter a phrase that they want to influence the beginning of the story
-- Once the time runs out or all answers are submitted, Fork-off uses the responses to generate an origin sentence and the number of forks specified at the start of the game
+- Once the game starts, each player has:
+  - 1 minute to enter a phrase that they want to influence the beginning of the story
+  - 1 minute to enter a phrase that the want to influence the first fork
+  - 1 minute to enter a phrase that they want to influnce (another) first fork
+- Once the time runs out or all answers are submitted, Fork-off uses the responses to generate an origin sentence and one fork per player (by combining two prompts)
 
 ### Following Rounds:
 
-- Player Turn
-  1. Read through each fork
-  2. Vote on which forks they want to make it through to the next round
-     2a. Players get 3 votes
-     2b. Players can vote for the same fork multiple times
-  3. Submit a phrase they want to influence the next round
-  4. The round concludes either when all responses are submitted or when 5 minutes (time-limit) has expired
-- Fork-off's Response
-  - Once the player round expires, Fork-off takes the top forks from that round and generates a next step for them based on the combined suggestions of the players.
-  - If the players vote for a smaller number of forks than the number set at the start of the game, then fork-off will generate an equal number of multiple forks per persisted story head, even if it causes a round with a greater number of forks than set at the start of the game.
-  - If multiple forks tie and it results in a scenario where more than one could be eliminated (ex: 4 forks tie and only 3 are normally persisted), then both tying forks are persisted to the following round. The game will prune back to the normal maximum the proceeding round if possible
+1. Players are assigned two forks from the previous round to create prompts for
+   1a. Players get one minute per prompt
+2. 2n forks are generated
+3. Players vote on which forks they want to make it through to the next round
+   3a. Players get 1 vote per player in the game
+   3b. Players cannot vote for the same fork multiple times
+   3c. In case of a tie, we randomly include a fork if needed or trim one randomly depending on the situation
+4. The round concludes either when all responses are submitted or when the time limit has expired (30s per fork?)
+5. Points are awarded based on who contributed to the forks that are getting progressed
 
 ### End of the Game:
 
@@ -47,10 +49,8 @@
 ### More Details:
 
 - Adjusting the room configuration
-  - At any point during gameplay, the person who created the room can adjust the number of forks they want generated as well as the variance between rounds
+  - At any point during gameplay, the person who created the room can adjust how many rounds they want gameplay to last, as well as the variance between rounds, and the default prompt to the storyteller
 - Story Coherence:
   - Players can see a summary of each fork at all times
   - Players can read the entirety of a story if they want
 - Sharing after game-play
-  - I think users should be able to export the entire story after playing as some sort of JSON or something
-  - I imagine we want some page that allows people to upload JSON and see the whole story tree
