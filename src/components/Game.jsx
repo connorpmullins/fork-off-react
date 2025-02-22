@@ -6,18 +6,14 @@ import Input from "./common/Input";
 import WaitingRoom from "./WaitingRoom";
 import { colors, typography, spacing } from "../styles/theme";
 
-const WritingPhase = ({ submitStory, roundTimer }) => {
+const WritingPhase = ({ submitStory }) => {
   const [story, setStory] = React.useState("");
-  const timeLeft = Math.max(0, roundTimer - Date.now());
 
   return (
     <Card>
       <h2 style={{ ...typography.heading2, marginBottom: spacing[4] }}>
         Write Your Story
       </h2>
-      <p style={{ marginBottom: spacing[4], color: colors.neutral.gray600 }}>
-        Time left: {Math.ceil(timeLeft / 1000)}s
-      </p>
       <Input
         multiline
         rows={4}
@@ -28,7 +24,7 @@ const WritingPhase = ({ submitStory, roundTimer }) => {
       />
       <Button
         onClick={() => submitStory(story)}
-        disabled={!story.trim() || timeLeft <= 0}
+        disabled={!story.trim()}
         style={{ width: "100%" }}
       >
         Submit Story
@@ -37,18 +33,14 @@ const WritingPhase = ({ submitStory, roundTimer }) => {
   );
 };
 
-const ForkingPhase = ({ currentStory, submitFork, roundTimer }) => {
+const ForkingPhase = ({ currentStory, submitFork }) => {
   const [fork, setFork] = React.useState("");
-  const timeLeft = Math.max(0, roundTimer - Date.now());
 
   return (
     <Card>
       <h2 style={{ ...typography.heading2, marginBottom: spacing[4] }}>
         Create Your Fork
       </h2>
-      <p style={{ marginBottom: spacing[4], color: colors.neutral.gray600 }}>
-        Time left: {Math.ceil(timeLeft / 1000)}s
-      </p>
       <div
         style={{
           padding: spacing[4],
@@ -69,7 +61,7 @@ const ForkingPhase = ({ currentStory, submitFork, roundTimer }) => {
       />
       <Button
         onClick={() => submitFork(fork)}
-        disabled={!fork.trim() || timeLeft <= 0}
+        disabled={!fork.trim()}
         style={{ width: "100%" }}
       >
         Submit Fork
@@ -78,18 +70,14 @@ const ForkingPhase = ({ currentStory, submitFork, roundTimer }) => {
   );
 };
 
-const VotingPhase = ({ currentStory, forks, submitVote, roundTimer }) => {
+const VotingPhase = ({ currentStory, forks, submitVote }) => {
   const [selectedFork, setSelectedFork] = React.useState(null);
-  const timeLeft = Math.max(0, roundTimer - Date.now());
 
   return (
     <Card>
       <h2 style={{ ...typography.heading2, marginBottom: spacing[4] }}>
         Vote for the Best Fork
       </h2>
-      <p style={{ marginBottom: spacing[4], color: colors.neutral.gray600 }}>
-        Time left: {Math.ceil(timeLeft / 1000)}s
-      </p>
       <div
         style={{
           padding: spacing[4],
@@ -119,7 +107,7 @@ const VotingPhase = ({ currentStory, forks, submitVote, roundTimer }) => {
       </div>
       <Button
         onClick={() => submitVote(selectedFork)}
-        disabled={!selectedFork || timeLeft <= 0}
+        disabled={!selectedFork}
         style={{ width: "100%" }}
       >
         Submit Vote
@@ -233,16 +221,10 @@ const Game = () => {
           />
         );
       case "writing":
-        return (
-          <WritingPhase submitStory={submitStory} roundTimer={roundTimer} />
-        );
+        return <WritingPhase submitStory={submitStory} />;
       case "forking":
         return (
-          <ForkingPhase
-            currentStory={currentStory}
-            submitFork={submitFork}
-            roundTimer={roundTimer}
-          />
+          <ForkingPhase currentStory={currentStory} submitFork={submitFork} />
         );
       case "voting":
         return (
@@ -250,7 +232,6 @@ const Game = () => {
             currentStory={currentStory}
             forks={forks}
             submitVote={submitVote}
-            roundTimer={roundTimer}
           />
         );
       case "results":

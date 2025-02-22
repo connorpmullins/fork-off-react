@@ -31,11 +31,9 @@ export const GameProvider = ({ children }) => {
     currentStory: "",
     forks: [],
     votes: {},
-    roundTimer: null,
     config: {
       numberOfRounds: 3,
       storyStyle: "",
-      basePrompt: "",
       variance: 5,
     },
   });
@@ -58,7 +56,6 @@ export const GameProvider = ({ children }) => {
             currentStory: data.currentStory || prev.currentStory,
             forks: data.forks || prev.forks,
             votes: data.votes || prev.votes,
-            roundTimer: data.roundTimer || prev.roundTimer,
           }));
         }
       }
@@ -80,7 +77,6 @@ export const GameProvider = ({ children }) => {
         currentStory: "",
         forks: [],
         votes: {},
-        roundTimer: null,
         players: [
           {
             id: Date.now(),
@@ -91,7 +87,6 @@ export const GameProvider = ({ children }) => {
         config: {
           numberOfRounds: 3,
           storyStyle: "",
-          basePrompt: "",
           variance: 5,
         },
       });
@@ -112,11 +107,9 @@ export const GameProvider = ({ children }) => {
         currentStory: "",
         forks: [],
         votes: {},
-        roundTimer: null,
         config: {
           numberOfRounds: 3,
           storyStyle: "",
-          basePrompt: "",
           variance: 5,
         },
       });
@@ -175,11 +168,9 @@ export const GameProvider = ({ children }) => {
           currentStory: roomData.currentStory || "",
           forks: roomData.forks || [],
           votes: roomData.votes || {},
-          roundTimer: roomData.roundTimer || null,
           config: roomData.config || {
             numberOfRounds: 3,
             storyStyle: "",
-            basePrompt: "",
             variance: 5,
           },
         });
@@ -207,11 +198,9 @@ export const GameProvider = ({ children }) => {
         currentStory: roomData.currentStory || "",
         forks: roomData.forks || [],
         votes: roomData.votes || {},
-        roundTimer: roomData.roundTimer || null,
         config: roomData.config || {
           numberOfRounds: 3,
           storyStyle: "",
-          basePrompt: "",
           variance: 5,
         },
       });
@@ -256,11 +245,9 @@ export const GameProvider = ({ children }) => {
         currentStory: "",
         forks: [],
         votes: {},
-        roundTimer: null,
         config: {
           numberOfRounds: 3,
           storyStyle: "",
-          basePrompt: "",
           variance: 5,
         },
       });
@@ -286,7 +273,6 @@ export const GameProvider = ({ children }) => {
         currentStory: "",
         forks: [],
         votes: {},
-        roundTimer: Date.now() + 120000, // 2 minutes for writing phase
         currentRound: 1,
         storyWriter: storyWriter.nickname,
       });
@@ -304,7 +290,6 @@ export const GameProvider = ({ children }) => {
       await updateDoc(roomRef, {
         currentStory: story,
         phase: "forking",
-        roundTimer: Date.now() + 90000, // 1.5 minutes for forking phase
       });
     } catch (error) {
       console.error("Error submitting story:", error);
@@ -332,7 +317,6 @@ export const GameProvider = ({ children }) => {
         // -1 because story writer doesn't fork
         await updateDoc(roomRef, {
           phase: "voting",
-          roundTimer: Date.now() + 60000, // 1 minute for voting phase
         });
       }
     } catch (error) {
