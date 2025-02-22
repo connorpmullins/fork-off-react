@@ -9,6 +9,7 @@ import {
   arrayRemove,
   onSnapshot,
 } from "firebase/firestore";
+import { generateForks } from "../services/openai";
 
 const GameContext = createContext();
 
@@ -263,10 +264,7 @@ export const GameProvider = ({ children }) => {
     try {
       const roomRef = doc(db, "rooms", gameState.roomId);
 
-      // Get a random player to be the first story writer
-      const storyWriter =
-        gameState.players[Math.floor(Math.random() * gameState.players.length)];
-
+      // In single player, the player is always the story writer
       await updateDoc(roomRef, {
         gameStarted: true,
         phase: "writing",
@@ -274,7 +272,7 @@ export const GameProvider = ({ children }) => {
         forks: [],
         votes: {},
         currentRound: 1,
-        storyWriter: storyWriter.nickname,
+        storyWriter: gameState.nickname,
       });
     } catch (error) {
       console.error("Error starting game:", error);
@@ -283,22 +281,107 @@ export const GameProvider = ({ children }) => {
   };
 
   const submitStory = async (story) => {
-    if (!gameState.roomId || gameState.phase !== "writing") return;
+    console.log("[GameContext] Submitting story:", {
+      phase: gameState.phase,
+      storyLength: story?.length,
+      roomId: gameState.roomId,
+      config: gameState.config,
+    });
+
+    if (!gameState.roomId || gameState.phase !== "writing") {
+      console.warn("[GameContext] Invalid state for story submission:", {
+        roomId: gameState.roomId,
+        phase: gameState.phase,
+      });
+      return;
+    }
+
+    if (!story || !story.trim()) {
+      console.error("[GameContext] Empty story submitted");
+      throw new Error("Story cannot be empty");
+    }
 
     try {
       const roomRef = doc(db, "rooms", gameState.roomId);
+      console.log("[GameContext] Updating story in Firestore");
+
+      // First update the story to ensure it's saved
       await updateDoc(roomRef, {
         currentStory: story,
-        phase: "forking",
       });
+      console.log("[GameContext] Story saved successfully");
+
+      // Generate more forks in single player mode
+      const forkCount = Math.max(3, gameState.players.length - 1);
+      console.log("[GameContext] Generating forks:", {
+        forkCount,
+        storyStyle: gameState.config.storyStyle,
+        variance: gameState.config.variance,
+      });
+
+      // Then generate forks based on the story and game config
+      const forkOptions = {
+        tone: gameState.config.storyStyle || "funny",
+        temperature: Math.max(0.1, Math.min(1, gameState.config.variance / 10)),
+        forksCount: forkCount,
+      };
+      console.log("[GameContext] Calling generateForks with:", {
+        story: story.trim(),
+        options: forkOptions,
+      });
+
+      const forks = await generateForks(story.trim(), forkOptions);
+      console.log("[GameContext] Forks generated successfully:", {
+        forkCount: forks.length,
+        forks: forks,
+      });
+
+      if (!Array.isArray(forks) || forks.length === 0) {
+        console.error("[GameContext] No forks were generated");
+        throw new Error("No forks were generated");
+      }
+
+      // Update the room with the generated forks and move to forking phase
+      console.log("[GameContext] Updating room with forks");
+      await updateDoc(roomRef, {
+        phase: "forking",
+        forks: forks.map((text) => ({
+          id: Date.now() + Math.random(),
+          text,
+          author: "AI",
+        })),
+      });
+      console.log(
+        "[GameContext] Room updated successfully, moving to forking phase"
+      );
     } catch (error) {
-      console.error("Error submitting story:", error);
+      console.error("[GameContext] Error in submitStory:", {
+        error: error.message,
+        stack: error.stack,
+      });
+      if (error.message.includes("context")) {
+        throw new Error(
+          "Failed to generate story variations. Please try again with a longer story."
+        );
+      }
       throw error;
     }
   };
 
   const submitFork = async (fork) => {
-    if (!gameState.roomId || gameState.phase !== "forking") return;
+    console.log("[GameContext] Submitting fork:", {
+      phase: gameState.phase,
+      forkLength: fork?.length,
+      roomId: gameState.roomId,
+    });
+
+    if (!gameState.roomId || gameState.phase !== "forking") {
+      console.warn("[GameContext] Invalid state for fork submission:", {
+        roomId: gameState.roomId,
+        phase: gameState.phase,
+      });
+      return;
+    }
 
     try {
       const roomRef = doc(db, "rooms", gameState.roomId);
@@ -309,44 +392,54 @@ export const GameProvider = ({ children }) => {
           author: gameState.nickname,
         }),
       });
+      console.log("[GameContext] Fork submitted successfully");
 
-      // If all players have submitted forks, move to voting phase
-      const roomSnap = await getDoc(roomRef);
-      const roomData = roomSnap.data();
-      if (roomData.forks.length === roomData.players.length - 1) {
-        // -1 because story writer doesn't fork
-        await updateDoc(roomRef, {
-          phase: "voting",
-        });
-      }
+      // Move to voting phase immediately in single player mode
+      await updateDoc(roomRef, {
+        phase: "voting",
+      });
+      console.log("[GameContext] Moving to voting phase");
     } catch (error) {
-      console.error("Error submitting fork:", error);
+      console.error("[GameContext] Error in submitFork:", {
+        error: error.message,
+        stack: error.stack,
+      });
       throw error;
     }
   };
 
   const submitVote = async (forkId) => {
-    if (!gameState.roomId || gameState.phase !== "voting") return;
+    console.log("[GameContext] Submitting vote:", {
+      phase: gameState.phase,
+      forkId,
+      roomId: gameState.roomId,
+    });
+
+    if (!gameState.roomId || gameState.phase !== "voting") {
+      console.warn("[GameContext] Invalid state for vote submission:", {
+        roomId: gameState.roomId,
+        phase: gameState.phase,
+      });
+      return;
+    }
 
     try {
       const roomRef = doc(db, "rooms", gameState.roomId);
       const votes = { ...gameState.votes };
       votes[gameState.nickname] = forkId;
 
-      await updateDoc(roomRef, { votes });
-
-      // If all players have voted, move to results phase
-      const roomSnap = await getDoc(roomRef);
-      const roomData = roomSnap.data();
-      if (Object.keys(roomData.votes).length === roomData.players.length - 1) {
-        // -1 because story writer doesn't vote
-        await updateDoc(roomRef, {
-          phase: "results",
-          gameStarted: false, // End the game
-        });
-      }
+      // In single player, move to results immediately after voting
+      await updateDoc(roomRef, {
+        votes,
+        phase: "results",
+        gameStarted: false,
+      });
+      console.log("[GameContext] Vote submitted and moved to results phase");
     } catch (error) {
-      console.error("Error submitting vote:", error);
+      console.error("[GameContext] Error in submitVote:", {
+        error: error.message,
+        stack: error.stack,
+      });
       throw error;
     }
   };

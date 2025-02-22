@@ -17,8 +17,19 @@ export const generateForks = async (
     temperature?: number;
     maxTokens?: number;
     forksCount?: number;
-  } = {},
+  } = {}
 ): Promise<string[]> => {
+  console.log("[generateForks] Starting fork generation:", {
+    contextLength: context?.length,
+    options,
+  });
+
+  // Validate input
+  if (!context || typeof context !== "string" || !context.trim()) {
+    console.error("[generateForks] Invalid context:", { context });
+    throw new Error("Story context must be a non-empty string");
+  }
+
   // Set default values for options
   const {
     tone = "funny",
@@ -27,29 +38,65 @@ export const generateForks = async (
     forksCount = 5,
   } = options;
 
+  console.log("[generateForks] Using options:", {
+    tone,
+    temperature,
+    maxTokens,
+    forksCount,
+  });
+
+  // Validate options
+  if (temperature < 0 || temperature > 1) {
+    console.error("[generateForks] Invalid temperature:", { temperature });
+    throw new Error("Temperature must be between 0 and 1");
+  }
+
+  if (forksCount < 1) {
+    console.error("[generateForks] Invalid forksCount:", { forksCount });
+    throw new Error("Must generate at least one fork");
+  }
+
   try {
-    const response = await generateForksCallable({
-      context,
+    const payload = {
+      storyContext: context.trim(),
       tone,
       temperature,
       maxTokens,
       forksCount,
-    });
+    };
+    console.log(
+      "[generateForks] Calling Firebase function with payload:",
+      JSON.stringify(payload, null, 2)
+    );
+
+    const response = await generateForksCallable(payload);
+    console.log(
+      "[generateForks] Firebase function response received: ",
+      JSON.stringify(response, null, 2)
+    );
 
     // Ensure the response contains valid data
     const data = response.data as { forks: string[] };
     if (!Array.isArray(data.forks) || data.forks.length === 0) {
+      console.error("[generateForks] Invalid response data:", { data });
       throw new Error("Invalid response: no forks generated.");
     }
 
-    return data.forks;
-  } catch (error) {
-    // Log the error for debugging
-    console.error("Error generating story forks:", error);
+    console.log("[generateForks] Successfully generated forks:", {
+      count: data.forks.length,
+      lengths: data.forks.map((f) => f.length),
+    });
 
-    // Provide a user-friendly error message
-    throw new Error(
-      "Failed to generate story forks. Please check your input and try again.",
-    );
+    return data.forks;
+  } catch (error: any) {
+    console.error("[generateForks] Error:", {
+      code: error.code,
+      message: error.message,
+      stack: error.stack,
+    });
+    if (error.code === "invalid-argument") {
+      throw new Error("Please provide a valid story to generate variations.");
+    }
+    throw new Error(`Failed to generate story forks: ${error.message}`);
   }
 };

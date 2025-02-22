@@ -1,68 +1,79 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { colors, typography, spacing, borderRadius } from "../../styles/theme";
+import { colors, typography } from "../../styles/theme";
 
 const Input = ({
   id,
   label,
-  type = "text",
   value,
   onChange,
-  required = false,
-  error = null,
-  ...props
+  error,
+  required,
+  multiline,
+  rows,
+  type,
+  min,
+  max,
+  placeholder,
+  style,
 }) => {
   const inputStyles = {
     width: "100%",
     padding: "0.75rem",
+    border: `1px solid ${error ? colors.error : colors.neutral.gray300}`,
     borderRadius: "0.375rem",
-    border: `2px solid ${error ? "#ef4444" : "#cbd5e1"}`,
-    fontSize: "1rem",
-    color: "#0f172a",
-    backgroundColor: "#ffffff",
-    transition: "all 150ms ease-in-out",
+    fontSize: typography.fontSize.base,
+    color: colors.neutral.gray900,
+    backgroundColor: colors.white,
+    outline: "none",
+    transition: "border-color 0.2s ease",
+    ...style,
   };
 
-  const labelStyles = {
-    display: "block",
-    marginBottom: "0.5rem",
-    color: "#334155",
-    fontSize: "0.875rem",
-    fontWeight: "500",
-    position: "relative",
-  };
-
-  const errorStyles = {
-    color: "#ef4444",
-    fontSize: "0.875rem",
-    marginTop: "0.5rem",
-  };
-
-  const requiredStyles = {
-    color: "#ef4444",
-    marginLeft: "2px",
+  const commonProps = {
+    id,
+    value,
+    onChange,
+    placeholder,
+    required,
+    style: inputStyles,
   };
 
   return (
-    <div style={{ width: "100%", marginBottom: "1rem" }}>
+    <div>
       {label && (
-        <label htmlFor={id} style={labelStyles}>
+        <label
+          htmlFor={id}
+          style={{
+            display: "block",
+            marginBottom: "0.5rem",
+            color: colors.neutral.gray700,
+          }}
+        >
           {label}
-          {required && <span style={requiredStyles}>*</span>}
+          {required && (
+            <span style={{ color: colors.error, marginLeft: "0.25rem" }}>
+              *
+            </span>
+          )}
         </label>
       )}
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={onChange}
-        required={required}
-        aria-required={required}
-        aria-invalid={!!error}
-        style={inputStyles}
-        {...props}
-      />
-      {error && <div style={errorStyles}>{error}</div>}
+      {multiline ? (
+        <textarea {...commonProps} rows={rows} />
+      ) : (
+        <input {...commonProps} type={type} min={min} max={max} />
+      )}
+      {error && (
+        <p
+          style={{
+            color: colors.error,
+            fontSize: typography.fontSize.sm,
+            marginTop: "0.25rem",
+          }}
+        >
+          {error}
+        </p>
+      )}
     </div>
   );
 };
@@ -70,11 +81,24 @@ const Input = ({
 Input.propTypes = {
   id: PropTypes.string.isRequired,
   label: PropTypes.string,
-  type: PropTypes.string,
   value: PropTypes.string,
-  onChange: PropTypes.func,
-  required: PropTypes.bool,
+  onChange: PropTypes.func.isRequired,
   error: PropTypes.string,
+  required: PropTypes.bool,
+  multiline: PropTypes.bool,
+  rows: PropTypes.number,
+  type: PropTypes.string,
+  min: PropTypes.number,
+  max: PropTypes.number,
+  placeholder: PropTypes.string,
+  style: PropTypes.object,
+};
+
+Input.defaultProps = {
+  type: "text",
+  required: false,
+  multiline: false,
+  rows: 3,
 };
 
 export default Input;

@@ -8,33 +8,72 @@ import { colors, typography, spacing } from "../styles/theme";
 
 const WritingPhase = ({ submitStory }) => {
   const [story, setStory] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const handleSubmit = async () => {
+    if (!story.trim()) {
+      setError("Please write a story before submitting");
+      return;
+    }
+
+    setError("");
+    setIsSubmitting(true);
+    try {
+      await submitStory(story);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Card>
       <h2 style={{ ...typography.heading2, marginBottom: spacing[4] }}>
         Write Your Story
       </h2>
+      <p style={{ color: colors.neutral.gray600, marginBottom: spacing[4] }}>
+        Write an engaging opening to your story. Make it interesting enough for
+        others to continue!
+      </p>
       <Input
         multiline
         rows={4}
         value={story}
-        onChange={(e) => setStory(e.target.value)}
+        onChange={(e) => {
+          setStory(e.target.value);
+          setError("");
+        }}
         placeholder="Once upon a time..."
-        style={{ marginBottom: spacing[4] }}
+        style={{ marginBottom: error ? spacing[2] : spacing[4] }}
       />
+      {error && (
+        <p
+          style={{
+            color: colors.error,
+            marginBottom: spacing[4],
+            fontSize: typography.fontSize.sm,
+          }}
+        >
+          {error}
+        </p>
+      )}
       <Button
-        onClick={() => submitStory(story)}
-        disabled={!story.trim()}
+        onClick={handleSubmit}
+        disabled={!story.trim() || isSubmitting}
+        loading={isSubmitting}
         style={{ width: "100%" }}
       >
-        Submit Story
+        {isSubmitting ? "Generating Variations..." : "Submit Story"}
       </Button>
     </Card>
   );
 };
 
-const ForkingPhase = ({ currentStory, submitFork }) => {
-  const [fork, setFork] = React.useState("");
+const ForkingPhase = ({ currentStory, submitFork, forks }) => {
+  const [selectedFork, setSelectedFork] = React.useState(null);
+  const [modifiedFork, setModifiedFork] = React.useState("");
 
   return (
     <Card>
@@ -51,17 +90,53 @@ const ForkingPhase = ({ currentStory, submitFork }) => {
       >
         {currentStory}
       </div>
-      <Input
-        multiline
-        rows={4}
-        value={fork}
-        onChange={(e) => setFork(e.target.value)}
-        placeholder="Continue the story..."
-        style={{ marginBottom: spacing[4] }}
-      />
+
+      <div style={{ marginBottom: spacing[4] }}>
+        <h3 style={{ ...typography.heading3, marginBottom: spacing[3] }}>
+          AI Suggestions
+        </h3>
+        <p style={{ color: colors.neutral.gray600, marginBottom: spacing[4] }}>
+          Select a suggestion to modify, or write your own fork from scratch.
+        </p>
+        {forks.map((fork) => (
+          <div
+            key={fork.id}
+            onClick={() => {
+              setSelectedFork(fork.id);
+              setModifiedFork(fork.text);
+            }}
+            style={{
+              padding: spacing[4],
+              marginBottom: spacing[2],
+              border: `2px solid ${selectedFork === fork.id ? colors.primary[500] : colors.neutral.gray200}`,
+              borderRadius: spacing[2],
+              cursor: "pointer",
+              backgroundColor:
+                selectedFork === fork.id ? colors.primary[50] : colors.white,
+            }}
+          >
+            {fork.text}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginBottom: spacing[4] }}>
+        <h3 style={{ ...typography.heading3, marginBottom: spacing[3] }}>
+          Your Fork
+        </h3>
+        <Input
+          multiline
+          rows={4}
+          value={modifiedFork}
+          onChange={(e) => setModifiedFork(e.target.value)}
+          placeholder="Write your own fork or modify the selected suggestion..."
+          style={{ marginBottom: spacing[4] }}
+        />
+      </div>
+
       <Button
-        onClick={() => submitFork(fork)}
-        disabled={!fork.trim()}
+        onClick={() => submitFork(modifiedFork)}
+        disabled={!modifiedFork.trim()}
         style={{ width: "100%" }}
       >
         Submit Fork
@@ -224,7 +299,11 @@ const Game = () => {
         return <WritingPhase submitStory={submitStory} />;
       case "forking":
         return (
-          <ForkingPhase currentStory={currentStory} submitFork={submitFork} />
+          <ForkingPhase
+            currentStory={currentStory}
+            submitFork={submitFork}
+            forks={forks}
+          />
         );
       case "voting":
         return (

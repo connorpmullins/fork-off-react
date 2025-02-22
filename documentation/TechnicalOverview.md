@@ -15,7 +15,7 @@
 
 3. **External APIs**:
 
-   - **OpenAI GPT (text-davinci-003 or equivalent)**: Generates story forks based on player-provided input and the current story context.
+   - **OpenAI GPT**: Generates story forks based on player-provided input and the current story context.
 
 4. **Hosting**:
    - **Firebase Hosting**: Serves the frontend React application.
@@ -172,3 +172,33 @@
 
 - Determine what data we need to pass to open ai at each step to get good responses
 - This is going to be crucial to get right in order to make the game enjoyable
+
+# Technical Implementation Status
+
+## Core Features (✓ = Done)
+
+- Authentication & Room Management
+
+  - ✓ Room creation/joining
+  - ✓ Nickname-based player tracking
+  - ✓ Host management & transfer
+  - ✓ Room configuration
+
+- Game Flow
+  - ✓ Lobby system
+  - ✓ Game phases (writing, forking, voting, results)
+  - ✓ Round timer implementation
+  - Basic story engine (WIP)
+
+## Tech Stack
+
+- React (Frontend)
+- Firebase (Backend)
+- No AI integration yet
+
+## Next Steps
+
+1. Story engine integration
+2. Multi-round implementation
+3. Scoring system
+4. Results sharing

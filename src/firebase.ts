@@ -1,5 +1,14 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { initializeApp, FirebaseApp } from "firebase/app";
+import {
+  getFirestore,
+  Firestore,
+  connectFirestoreEmulator,
+} from "firebase/firestore";
+import {
+  getFunctions,
+  Functions,
+  connectFunctionsEmulator,
+} from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -11,12 +20,14 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app: FirebaseApp = initializeApp(firebaseConfig);
+const db: Firestore = getFirestore(app);
+const functions: Functions = getFunctions(app);
 
 // Connect to emulators in development
 if (process.env.NODE_ENV === "development") {
   connectFirestoreEmulator(db, "localhost", 9150);
+  connectFunctionsEmulator(functions, "localhost", 5001);
 }
 
-export { db };
+export { app, db, functions };

@@ -10,7 +10,7 @@
 - One player creates a room
 - They can invite people to join (by sharing the code)
 - They set the number of rounds
-- They can set the style of the story and any other base prompts for the storytelling engine
+- They can set the style of the story for the storytelling engine
 - They configure the amount of variance introduced in each round of forking
   - Variance goes from 1 - 10
   - Example of how two forks given the starting sentence "Jamie climbed to the top of a tree."
@@ -25,9 +25,9 @@
 ### The First Round:
 
 - Once the game starts, each player has:
-  - 1 minute to enter a phrase that they want to influence the beginning of the story
-  - 1 minute to enter a phrase that the want to influence the first fork
-  - 1 minute to enter a phrase that they want to influnce (another) first fork
+  - To enter a phrase that they want to influence the beginning of the story
+  - To enter a phrase that the want to influence the first fork
+  - To enter a phrase that they want to influnce (another) first fork
 - Once the time runs out or all answers are submitted, Fork-off uses the responses to generate an origin sentence and one fork per player (by combining two prompts)
 
 ### Following Rounds:
@@ -54,3 +54,32 @@
   - Players can see a summary of each fork at all times
   - Players can read the entirety of a story if they want
 - Sharing after game-play
+
+# Fork-off: Current Implementation Status
+
+## What Works Now
+
+- Room Management
+
+  - Create/join rooms with nickname
+  - Room code sharing
+  - Host controls & transfer
+  - Player list tracking
+
+- Basic Game Flow
+  - Lobby with configuration
+  - Writing phase
+  - Forking phase
+  - Voting system
+  - Results display
+
+## Coming Soon
+
+- Story engine integration
+- Multi-round gameplay
+- Point system
+- Story sharing
+
+## Original Game Design
+
+// ... existing code ...

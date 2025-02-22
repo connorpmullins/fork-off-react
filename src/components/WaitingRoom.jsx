@@ -73,9 +73,10 @@ const HostConfigView = ({
         </label>
         <Input
           type="number"
+          id="numberOfRounds"
           min={1}
           max={10}
-          value={config.numberOfRounds}
+          value={config.numberOfRounds.toString()}
           onChange={(e) =>
             handleChange("numberOfRounds", parseInt(e.target.value, 10))
           }
@@ -86,21 +87,10 @@ const HostConfigView = ({
           Story Style
         </label>
         <Input
+          id="storyStyle"
           value={config.storyStyle}
           onChange={(e) => handleChange("storyStyle", e.target.value)}
           placeholder="e.g., Fantasy, Sci-fi, Horror"
-          style={{ marginBottom: spacing[4] }}
-        />
-
-        <label style={{ display: "block", marginBottom: spacing[2] }}>
-          Base Prompt
-        </label>
-        <Input
-          multiline
-          rows={3}
-          value={config.basePrompt}
-          onChange={(e) => handleChange("basePrompt", e.target.value)}
-          placeholder="Set a theme or starting point for the stories..."
           style={{ marginBottom: spacing[4] }}
         />
 
@@ -116,6 +106,7 @@ const HostConfigView = ({
         >
           <input
             type="range"
+            id="variance"
             min="1"
             max="10"
             value={config.variance}
@@ -143,11 +134,24 @@ const HostConfigView = ({
 
       <Button
         onClick={onStartGame}
-        disabled={players.length < 2}
+        disabled={players.length < 1}
         style={{ width: "100%" }}
       >
-        Start Game
+        {players.length === 1 ? "Start Solo Game" : "Start Game"}
       </Button>
+
+      {players.length === 1 && (
+        <p
+          style={{
+            marginTop: spacing[4],
+            color: colors.neutral.gray600,
+            textAlign: "center",
+            fontSize: typography.fontSize.sm,
+          }}
+        >
+          Playing solo will generate AI suggestions for you to choose from.
+        </p>
+      )}
     </Card>
   );
 };
